@@ -1,10 +1,17 @@
-import { Button } from "@/components/ui/button";
+import { Route, Routes } from "react-router";
+import LoginPage from "./pages/auth/LoginPage";
+import RootLayout from "@/components/root-layout";
+import DashboardPage from "./pages/dashboard/DashboardPage";
 
 function App() {
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center">
-      <Button>Click me</Button>
-    </div>
+    <Routes>
+      <Route path="/" element={<RootLayout />}>
+        <Route index element={<LoginPage />} />
+
+        <Route path="dashboard" element={<DashboardPage />} />
+      </Route>
+    </Routes>
   );
 }
 
