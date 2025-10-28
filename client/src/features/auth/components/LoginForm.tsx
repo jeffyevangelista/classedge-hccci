@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Field,
+  FieldError,
   FieldGroup,
   FieldLabel,
   FieldSeparator,
@@ -9,36 +10,40 @@ import {
 import { Input } from "@/components/ui/input";
 import MSLogo from "@/assets/ms-logo.svg";
 import { Link, useNavigate } from "react-router";
-import { useState } from "react";
 import { useLogin } from "../auth.hooks";
 import { Loader } from "lucide-react";
+import ReCAPTCHA from "react-google-recaptcha";
+import { SITE_KEY } from "@/utils/env";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema, type LoginFormValues } from "../auth.schemas";
+import type { LoginCredentials } from "../auth.types";
 
-export function LoginForm({
-  className,
-  ...props
-}: React.ComponentProps<"form">) {
+export function LoginForm() {
   const navigate = useNavigate();
   const { mutateAsync: login, isPending } = useLogin();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const {
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm<LoginCredentials>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      recaptcha: "",
+    },
+  });
 
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    await login({
-      email: email,
-      password: password,
-    });
+  const handleLogin = async (data: LoginFormValues) => {
+    await login({ ...data, recaptcha: "dev-bypass-token" });
+
     navigate("/dashboard");
   };
 
   return (
-    <form
-      autoComplete="off"
-      onSubmit={handleLogin}
-      className={cn("flex flex-col gap-6", className)}
-      {...props}
-    >
+    <form autoComplete="off" onSubmit={handleSubmit(handleLogin)}>
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">
           <h1 className="text-2xl font-bold">Welcome to Classedge</h1>
@@ -48,26 +53,42 @@ export function LoginForm({
         </div>
         <Field>
           <FieldLabel htmlFor="email">Email</FieldLabel>
-          <Input
-            autoComplete="off"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            id="email"
-            type="email"
-            placeholder="m@example.com"
-            required
+          <Controller
+            control={control}
+            name="email"
+            render={({ field, fieldState }) => (
+              <Input
+                autoComplete="off"
+                id="email"
+                placeholder="juandelacruz@hccci.edu.ph"
+                {...field}
+                className={
+                  fieldState.invalid ? "border-red-500 focus:ring-red-500" : ""
+                }
+              />
+            )}
           />
+          {errors.email && <FieldError>{errors.email?.message}</FieldError>}
         </Field>
         <Field>
           <FieldLabel htmlFor="password">Password</FieldLabel>
-
-          <Input
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            id="password"
-            type="password"
-            required
+          <Controller
+            control={control}
+            name="password"
+            render={({ field, fieldState }) => (
+              <Input
+                id="password"
+                type="password"
+                {...field}
+                className={
+                  fieldState.invalid ? "border-red-500 focus:ring-red-500" : ""
+                }
+              />
+            )}
           />
+          {errors.password && (
+            <FieldError>{errors.password?.message}</FieldError>
+          )}
           <div className="flex items-center">
             <Link
               to="/forgot-password"
@@ -77,6 +98,22 @@ export function LoginForm({
             </Link>
           </div>
         </Field>
+
+        <Field>
+          <div className="flex justify-center">
+            <Controller
+              control={control}
+              name="recaptcha"
+              render={({ field }) => (
+                <ReCAPTCHA sitekey={SITE_KEY} {...field} />
+              )}
+            />
+          </div>
+          {errors.recaptcha && (
+            <FieldError>{errors.recaptcha?.message}</FieldError>
+          )}
+        </Field>
+
         <Field>
           <Button type="submit" disabled={isPending}>
             {isPending ? <Loader className="animate-spin" /> : "Login"}
