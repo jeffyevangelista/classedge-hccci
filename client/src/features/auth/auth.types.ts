@@ -3,7 +3,7 @@ import { type JwtPayload } from "jwt-decode";
 export type LoginCredentials = {
   email: string;
   password: string;
-  recaptcha: string;
+  // recaptcha: string;
 };
 
 export type DecodedToken = JwtPayload & {

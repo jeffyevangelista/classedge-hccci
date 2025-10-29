@@ -10,8 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router";
 import { useLogin } from "../auth.hooks";
 import { Loader } from "lucide-react";
-import ReCAPTCHA from "react-google-recaptcha";
-import { SITE_KEY } from "@/utils/env";
+// import ReCAPTCHA from "react-google-recaptcha";
+// import { SITE_KEY } from "@/utils/env";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginFormValues } from "../auth.schemas";
@@ -31,7 +31,7 @@ export function LoginForm() {
     defaultValues: {
       email: "",
       password: "",
-      recaptcha: "",
+      // recaptcha: "",
     },
   });
 

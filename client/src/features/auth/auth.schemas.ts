@@ -14,7 +14,7 @@ export const forgotPasswordSchema = z.object({
 export const loginSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, "Password is required"),
-  recaptcha: z.string().min(1, "ReCAPTCHA is required"),
+  // recaptcha: z.string().min(1, "ReCAPTCHA is required"),
 });
 
 export const confirmPasswordSchema = z
