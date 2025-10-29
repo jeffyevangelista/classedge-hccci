@@ -1,4 +1,3 @@
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -8,7 +7,6 @@ import {
   FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import MSLogo from "@/assets/ms-logo.svg";
 import { Link, useNavigate } from "react-router";
 import { useLogin } from "../auth.hooks";
 import { Loader } from "lucide-react";
@@ -18,6 +16,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginFormValues } from "../auth.schemas";
 import type { LoginCredentials } from "../auth.types";
+import MSAuthButton from "./MSAuthButton";
 
 export function LoginForm() {
   const navigate = useNavigate();
@@ -120,16 +119,7 @@ export function LoginForm() {
           </Button>
         </Field>
         <FieldSeparator>or continue with</FieldSeparator>
-        <Field>
-          <Button
-            variant="outline"
-            type="button"
-            onClick={() => navigate("/dashboard")}
-          >
-            <img src={MSLogo} alt="ms-logo" className="size-4" />
-            Microsoft
-          </Button>
-        </Field>
+        <MSAuthButton />
       </FieldGroup>
     </form>
   );
