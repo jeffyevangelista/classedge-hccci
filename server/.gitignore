@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.env
+*.venv
+*.egg-info/
+*.pyo
+*.pyd
+*.pot
+*.mo
+*.swp
+*.swo
+
+# SQLite database files
+*.sqlite3
+/db.sqlite3
+
+# Django
+/media/
+migrations/
+
+# Environments
+.env
+env
+venv
+venv/
+
+# Git
+.DS_Store
+
+lms/settings.py
