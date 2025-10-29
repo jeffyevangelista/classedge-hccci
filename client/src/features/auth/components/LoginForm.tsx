@@ -36,9 +36,7 @@ export function LoginForm() {
   });
 
   const handleLogin = async (data: LoginFormValues) => {
-    await login({ ...data, recaptcha: "dev-bypass-token" });
-
-    navigate("/dashboard");
+    await login({ ...data });
   };
 
   return (
@@ -98,7 +96,7 @@ export function LoginForm() {
           </div>
         </Field>
 
-        <Field>
+        {/* <Field>
           <div className="flex justify-center">
             <Controller
               control={control}
@@ -111,7 +109,7 @@ export function LoginForm() {
           {errors.recaptcha && (
             <FieldError>{errors.recaptcha?.message}</FieldError>
           )}
-        </Field>
+        </Field> */}
 
         <Field>
           <Button type="submit" disabled={isPending}>
