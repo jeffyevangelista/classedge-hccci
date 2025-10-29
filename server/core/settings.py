@@ -189,7 +189,9 @@ CSRF_TRUSTED_ORIGINS = [
     'http://172.16.30.236:8000',
     'http://172.16.30.95:8000',
     'http://localhost:5173',
-    
+    'https://nonsuggestive-belia-apheliotropic.ngrok-free.dev',
+    'http://127.0.0.1:4040',
+    'http://localhost:4040',
 ]
 
 SITE_ID = 1
@@ -206,9 +208,9 @@ CSRF_COOKIE_SECURE = False
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SECURE = False
 
-# Ensure these are explicitly set for development
-CSRF_COOKIE_HTTPONLY = False  # Allow JS access for development
+CSRF_COOKIE_HTTPONLY = False
 SESSION_COOKIE_HTTPONLY = True
+
 
 SIMPLE_JWT = {
     "USER_ID_FIELD": "cuid",         
@@ -311,3 +313,10 @@ RECAPTCHA_REQUIRED_SCORE = 0.5
 USE_X_FORWARDED_HOST = True
 USE_X_FORWARDED_PORT = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+OTP_VERIFIED_TTL_MINUTES = 10
+
+REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
+REDIS_PORT = os.getenv('REDIS_PORT', 6379)
+REDIS_DB = os.getenv('REDIS_DB', 0)
+REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', None)
