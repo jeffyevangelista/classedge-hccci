@@ -1,5 +1,5 @@
-# cookies.py
-from rest_framework.views import APIView
+# views_auth.py
+
 from django.conf import settings
 from django.http import JsonResponse
 from django.middleware.csrf import get_token
@@ -7,6 +7,7 @@ from django.contrib.auth import logout as django_logout, get_user_model
 
 from rest_framework import status
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -15,53 +16,47 @@ from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 from rest_framework_simplejwt.settings import api_settings
 
-from django.conf import settings
-from accounts.models import Profile, LoginHistory
-
 User = get_user_model()
 
-
-# --------------------------
-# COOKIE CONFIG
-# --------------------------
-def cookie_opts(max_age: int):
-    is_production = not settings.DEBUG
+def _cookie_opts(max_age: int, *, httponly: bool = True):
     return {
-        "httponly": True,
-        "secure": is_production,  # Only secure when HTTPS
-        "samesite": "None" if is_production else "Lax",  # Cross-domain in production
+        "httponly": httponly,
+        "secure": settings.SESSION_COOKIE_SECURE,
+        "samesite": settings.SESSION_COOKIE_SAMESITE,
         "path": "/",
         "max_age": max_age,
     }
 
-    
-# --------------------------
-# CUSTOM TOKEN SERIALIZERS
-# --------------------------
+# ---------- SERIALIZERS ----------
+# All user Details in Access Token
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-    """LOGIN: include nested user info with role inside access token."""
-
+    """LOGIN: include nested `user` in access token."""
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-
-        # Handle user → profile → role relationship
         try:
-            profile = user.profile
-            role_name = profile.role.name if profile and profile.role else None
-        except Profile.DoesNotExist:
-            role_name = None
-
-        token["role"] = [role_name] if role_name else []
+            bu_qs = getattr(user, "business_unit").all()
+            bu_ids   = list(bu_qs.values_list("id", flat=True))
+            bu_names = list(bu_qs.values_list("business_unit_name", flat=True))
+            bu_obj = {"ids": bu_ids, "names": bu_names} if bu_ids else None
+        except Exception:
+            bu_obj = None
+        role = getattr(user, "role", None)
+        token["user"] = {
+            "id": str(user.pk),
+            "roles": [role] if role else [],
+        }
         return token
 
 
 class MinimalTokenRefreshSerializer(TokenRefreshSerializer):
-    """REFRESH: return a minimal access token, ensure user still exists."""
-
+    """
+    REFRESH: build a *minimal* ACCESS from user_id; verify user exists.
+    If rotating, also mint a minimal REFRESH.
+    """
     def validate(self, attrs):
         refresh = self.token_class(attrs["refresh"])
-
+        # Extract and verify user_id from refresh payload
         try:
             user_id = refresh[api_settings.USER_ID_CLAIM]
         except KeyError:
@@ -72,19 +67,16 @@ class MinimalTokenRefreshSerializer(TokenRefreshSerializer):
         except User.DoesNotExist:
             raise TokenError("User not found")
 
-        # Build new access token
+        # Create access token with user details
         access = AccessToken.for_user(user)
-        try:
-            profile = user.profile
-            role_name = profile.role.name if profile and profile.role else None
-        except Profile.DoesNotExist:
-            role_name = None
-
-        access["role"] = [role_name] if role_name else []
-
+        role = getattr(user, "role", None)
+        access["user"] = {
+            "id": str(user.pk),
+            "roles": [role] if role else [],
+        }
+        
         data = {"access": str(access)}
 
-        # Optional rotation
         if api_settings.ROTATE_REFRESH_TOKENS:
             if api_settings.BLACKLIST_AFTER_ROTATION:
                 try:
@@ -96,96 +88,46 @@ class MinimalTokenRefreshSerializer(TokenRefreshSerializer):
 
         return data
 
-
+# ---------- VIEWS ----------
+# Selected User detials in Refresh Token
 class MinimalRefreshToken(RefreshToken):
-    """Custom minimal refresh token containing only user id + role."""
-
+    """Custom refresh token with only essential claims."""
     @classmethod
     def for_user(cls, user):
         token = super().for_user(user)
-        try:
-            profile = user.profile
-            role_name = profile.role.name if profile and profile.role else None
-        except Profile.DoesNotExist:
-            role_name = None
-
+        # Ensure only minimal claims are present
+        # Remove any additional claims that might have been added
+        allowed_claims = {
+            'token_type', 'exp', 'iat', 'jti', 
+            api_settings.USER_ID_CLAIM, 'user'
+        }
+        role = getattr(user, "role", None)
         token["user"] = {
             "id": str(user.pk),
+            "roles": [role] if role else [],
         }
-        token["role"] = [role_name] if role_name else []
-
-        # Strip out any unnecessary claims
-        allowed = {
-            "token_type",
-            "exp",
-            "iat",
-            "jti",
-            api_settings.USER_ID_CLAIM,
-            "user",
-        }
+        # Filter out any extra claims
         for key in list(token.payload.keys()):
-            if key not in allowed:
+            if key not in allowed_claims:
                 del token.payload[key]
         return token
 
-
-# --------------------------
-# AUTH VIEWS
-# --------------------------
+# Saved data to cookies upon login
 class CookieTokenObtainPairView(TokenObtainPairView):
-    """POST {username, password, recaptcha_token} → returns access JSON and sets refresh cookie."""
-
+    """POST {email, password} → JSON(access w/ user), Set-Cookie(refresh)."""
     permission_classes = [AllowAny]
     serializer_class = MyTokenObtainPairSerializer
 
-    def verify_recaptcha(self, token):
-        """Verify Google reCAPTCHA v2/v3."""
-        url = "https://www.google.com/recaptcha/api/siteverify"
-        data = {
-            "secret": settings.RECAPTCHA_PRIVATE_KEY,
-            "response": token,
-        }
-        try:
-            r = requests.post(url, data=data, timeout=5)
-            result = r.json()
-        except Exception:
-            return False, "Error contacting reCAPTCHA service."
-
-        if not result.get("success"):
-            return False, "Invalid reCAPTCHA. Please try again."
-
-        score = result.get("score")
-        if score is not None and score < settings.RECAPTCHA_REQUIRED_SCORE:
-            return False, f"Low reCAPTCHA score ({score})."
-
-        return True, None
-
     def post(self, request, *args, **kwargs):
-        recaptcha_token = request.data.get("recaptcha_token")
-        if not recaptcha_token:
-            return Response({"detail": "Missing reCAPTCHA token."}, status=400)
-
-        # Allow test bypass in DEBUG
-        if not (settings.DEBUG and recaptcha_token == "test-pass"):
-            valid, err = self.verify_recaptcha(recaptcha_token)
-            if not valid:
-                return JsonResponse({"error": err}, status=400)
-
-        # Validate user credentials
         serializer = self.get_serializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
         except TokenError as e:
             raise InvalidToken(e.args[0])
 
-        user = serializer.user
-        access = str(serializer.validated_data["access"])
-        refresh = str(MinimalRefreshToken.for_user(user))
+        access  = str(serializer.validated_data["access"])
+        refresh = str(MinimalRefreshToken.for_user(serializer.user))
 
-        # Record login
-        LoginHistory.objects.create(user=user)
-
-        # Build response
         resp = JsonResponse({"access": access}, status=status.HTTP_200_OK)
         resp["Cache-Control"] = "no-store"
         resp["Pragma"] = "no-cache"
@@ -193,45 +135,9 @@ class CookieTokenObtainPairView(TokenObtainPairView):
         access_max_age = int(settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].total_seconds())
         refresh_max_age = int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds())
 
-        resp.set_cookie("access", access, **cookie_opts(access_max_age))
-        resp.set_cookie("refresh", refresh, **cookie_opts(refresh_max_age))
-        return resp
+        resp.set_cookie("access", access, **_cookie_opts(access_max_age, httponly=False))
+        resp.set_cookie("refresh", refresh, **_cookie_opts(refresh_max_age))
 
-
-class CookieTokenRefreshView(TokenRefreshView):
-    """GET or POST → refresh access token using the refresh cookie."""
-
-    permission_classes = [AllowAny]
-    serializer_class = MinimalTokenRefreshSerializer
-    http_method_names = ["get", "post", "head", "options"]
-
-    def _refresh_from_cookie(self, request):
-        refresh_token = request.COOKIES.get("refresh")
-        if not refresh_token:
-            return Response({"detail": "No refresh cookie found."}, status=status.HTTP_401_UNAUTHORIZED)
-
-        serializer = self.get_serializer(data={"refresh": refresh_token})
-        try:
-            serializer.is_valid(raise_exception=True)
-        except TokenError:
-            return Response({"detail": "Invalid or expired refresh token."}, status=status.HTTP_401_UNAUTHORIZED)
-
-        access = serializer.validated_data["access"]
-        resp = JsonResponse({"access": access}, status=status.HTTP_200_OK)
-        resp["Cache-Control"] = "no-store"
-        resp["Pragma"] = "no-cache"
-
-        # Reset access cookie
-        access_max_age = int(settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].total_seconds())
-        resp.set_cookie("access", access, **cookie_opts(access_max_age))
-
-        # Handle refresh rotation (optional)
-        if "refresh" in serializer.validated_data:
-            new_refresh = serializer.validated_data["refresh"]
-            refresh_max_age = int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds())
-            resp.set_cookie("refresh", new_refresh, **cookie_opts(refresh_max_age))
-
-        # Renew CSRF token
         resp.set_cookie(
             settings.CSRF_COOKIE_NAME,
             get_token(request),
@@ -239,7 +145,56 @@ class CookieTokenRefreshView(TokenRefreshView):
             samesite=settings.SESSION_COOKIE_SAMESITE,
             path="/",
         )
+        return resp
 
+# request access token via request
+class CookieTokenRefreshView(TokenRefreshView):
+    """
+    GET/POST (empty body)
+    - Reads 'refresh' from HttpOnly cookie
+    - Verifies user exists
+    - Returns minimal 'access' in JSON
+    - If rotate, sets NEW minimal 'refresh' cookie
+    """
+    permission_classes = [AllowAny]
+    serializer_class = MinimalTokenRefreshSerializer
+    http_method_names = ["get", "post", "head", "options"]  # allow GET
+
+    def _refresh_from_cookie(self, request):
+        refresh_token = request.COOKIES.get("refresh")
+        if not refresh_token:
+            return Response({"detail": "No refresh cookie."}, status=401)
+
+        serializer = self.get_serializer(data={"refresh": refresh_token})
+        try:
+            serializer.is_valid(raise_exception=True)
+        except TokenError as e:
+            # Convert to SimpleJWT InvalidToken → 401
+            raise InvalidToken(e.args[0])
+
+        access = str(serializer.validated_data["access"])
+        resp = JsonResponse({"message": "Refreshed", "access": access}, status=200)
+        resp["Cache-Control"] = "no-store"
+        resp["Pragma"] = "no-cache"
+
+        access_max_age = int(settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].total_seconds())
+        refresh_max_age = int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds())
+
+        resp.set_cookie("access", access, **_cookie_opts(access_max_age, httponly=False))
+
+        # Rotate cookie if provided
+        if "refresh" in serializer.validated_data:
+            new_refresh = str(serializer.validated_data["refresh"])
+            resp.set_cookie("refresh", new_refresh, **_cookie_opts(refresh_max_age))
+
+        # Optional: refresh CSRF cookie
+        resp.set_cookie(
+            settings.CSRF_COOKIE_NAME,
+            get_token(request),
+            secure=settings.SESSION_COOKIE_SECURE,
+            samesite=settings.SESSION_COOKIE_SAMESITE,
+            path="/",
+        )
         return resp
 
     def get(self, request, *args, **kwargs):
@@ -248,10 +203,9 @@ class CookieTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
         return self._refresh_from_cookie(request)
 
-
+#clear access token upon logout
 class CookieLogoutView(APIView):
-    """Logs user out and clears cookies."""
-
+    """POST — clears cookies and (optionally) blacklists the refresh token."""
     def post(self, request):
         refresh_token = request.COOKIES.get("refresh")
         if refresh_token:
@@ -259,10 +213,8 @@ class CookieLogoutView(APIView):
                 RefreshToken(refresh_token).blacklist()
             except Exception:
                 pass
-
         django_logout(request)
         resp = JsonResponse({"message": "Logged out"})
-        for name in ("access","refresh", settings.CSRF_COOKIE_NAME):
+        for name in ("access", "refresh", settings.CSRF_COOKIE_NAME):
             resp.delete_cookie(name, path="/")
         return resp
-
