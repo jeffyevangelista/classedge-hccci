@@ -6,7 +6,6 @@ type AuthState = {
   accessToken: string | null;
   isAuthenticated: boolean;
   authUser: AuthUser | null;
-  role: string[] | null;
 };
 
 type AuthAction = {
@@ -20,7 +19,6 @@ const initialState: AuthState = {
   accessToken: null,
   isAuthenticated: false,
   authUser: null,
-  role: null,
 };
 
 const createAuthSlice: StateCreator<AuthSlice> = (set) => ({
@@ -28,7 +26,9 @@ const createAuthSlice: StateCreator<AuthSlice> = (set) => ({
   setCredentials: async (token: string) => {
     const { role, user_id } = jwtDecode<DecodedToken>(token);
     set({
+      accessToken: token,
       authUser: { userId: user_id, role },
+      isAuthenticated: true,
     });
   },
   clearCredentials: async () => {
