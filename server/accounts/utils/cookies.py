@@ -30,33 +30,21 @@ def _cookie_opts(max_age: int, *, httponly: bool = True):
 # ---------- SERIALIZERS ----------
 # All user Details in Access Token
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
-    """LOGIN: include nested `user` in access token."""
+    """LOGIN: include `roles` directly in access token."""
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        try:
-            bu_qs = getattr(user, "business_unit").all()
-            bu_ids   = list(bu_qs.values_list("id", flat=True))
-            bu_names = list(bu_qs.values_list("business_unit_name", flat=True))
-            bu_obj = {"ids": bu_ids, "names": bu_names} if bu_ids else None
-        except Exception:
-            bu_obj = None
         role = getattr(user, "role", None)
-        token["user"] = {
-            "id": str(user.pk),
-            "roles": [role] if role else [],
-        }
+        token["roles"] = [role] if role else []
         return token
 
 
 class MinimalTokenRefreshSerializer(TokenRefreshSerializer):
     """
-    REFRESH: build a *minimal* ACCESS from user_id; verify user exists.
-    If rotating, also mint a minimal REFRESH.
+    REFRESH: Build minimal ACCESS from user_id; verify user exists.
     """
     def validate(self, attrs):
         refresh = self.token_class(attrs["refresh"])
-        # Extract and verify user_id from refresh payload
         try:
             user_id = refresh[api_settings.USER_ID_CLAIM]
         except KeyError:
@@ -67,14 +55,10 @@ class MinimalTokenRefreshSerializer(TokenRefreshSerializer):
         except User.DoesNotExist:
             raise TokenError("User not found")
 
-        # Create access token with user details
         access = AccessToken.for_user(user)
         role = getattr(user, "role", None)
-        access["user"] = {
-            "id": str(user.pk),
-            "roles": [role] if role else [],
-        }
-        
+        access["roles"] = [role] if role else []
+
         data = {"access": str(access)}
 
         if api_settings.ROTATE_REFRESH_TOKENS:
@@ -88,6 +72,7 @@ class MinimalTokenRefreshSerializer(TokenRefreshSerializer):
 
         return data
 
+
 # ---------- VIEWS ----------
 # Selected User detials in Refresh Token
 class MinimalRefreshToken(RefreshToken):
@@ -95,18 +80,10 @@ class MinimalRefreshToken(RefreshToken):
     @classmethod
     def for_user(cls, user):
         token = super().for_user(user)
-        # Ensure only minimal claims are present
-        # Remove any additional claims that might have been added
         allowed_claims = {
-            'token_type', 'exp', 'iat', 'jti', 
-            api_settings.USER_ID_CLAIM, 'user'
+            "token_type", "exp", "iat", "jti", api_settings.USER_ID_CLAIM
         }
-        role = getattr(user, "role", None)
-        token["user"] = {
-            "id": str(user.pk),
-            "roles": [role] if role else [],
-        }
-        # Filter out any extra claims
+        # Remove any other keys that might have been added
         for key in list(token.payload.keys()):
             if key not in allowed_claims:
                 del token.payload[key]
@@ -120,24 +97,29 @@ class CookieTokenObtainPairView(TokenObtainPairView):
 
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        try:
-            serializer.is_valid(raise_exception=True)
-        except TokenError as e:
-            raise InvalidToken(e.args[0])
+        serializer.is_valid(raise_exception=True)
 
-        access  = str(serializer.validated_data["access"])
+        access = str(serializer.validated_data["access"])
         refresh = str(MinimalRefreshToken.for_user(serializer.user))
 
         resp = JsonResponse({"access": access}, status=status.HTTP_200_OK)
         resp["Cache-Control"] = "no-store"
         resp["Pragma"] = "no-cache"
 
-        access_max_age = int(settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].total_seconds())
         refresh_max_age = int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds())
 
-        resp.set_cookie("access", access, **_cookie_opts(access_max_age, httponly=False))
-        resp.set_cookie("refresh", refresh, **_cookie_opts(refresh_max_age))
+        # ✅ Only set refresh (JWT) cookie, not access
+        resp.set_cookie(
+            "jwt",  # you can keep "refresh" if you prefer
+            refresh,
+            httponly=True,
+            secure=settings.SESSION_COOKIE_SECURE,
+            samesite=settings.SESSION_COOKIE_SAMESITE,
+            max_age=refresh_max_age,
+            path="/"
+        )
 
+        # Keep CSRF token
         resp.set_cookie(
             settings.CSRF_COOKIE_NAME,
             get_token(request),
@@ -149,52 +131,36 @@ class CookieTokenObtainPairView(TokenObtainPairView):
 
 # request access token via request
 class CookieTokenRefreshView(TokenRefreshView):
-    """
-    GET/POST (empty body)
-    - Reads 'refresh' from HttpOnly cookie
-    - Verifies user exists
-    - Returns minimal 'access' in JSON
-    - If rotate, sets NEW minimal 'refresh' cookie
-    """
+    """GET/POST - Reads 'jwt' cookie, returns new access token JSON."""
     permission_classes = [AllowAny]
     serializer_class = MinimalTokenRefreshSerializer
-    http_method_names = ["get", "post", "head", "options"]  # allow GET
 
     def _refresh_from_cookie(self, request):
-        refresh_token = request.COOKIES.get("refresh")
+        refresh_token = request.COOKIES.get("jwt")
         if not refresh_token:
             return Response({"detail": "No refresh cookie."}, status=401)
 
         serializer = self.get_serializer(data={"refresh": refresh_token})
-        try:
-            serializer.is_valid(raise_exception=True)
-        except TokenError as e:
-            # Convert to SimpleJWT InvalidToken → 401
-            raise InvalidToken(e.args[0])
+        serializer.is_valid(raise_exception=True)
 
         access = str(serializer.validated_data["access"])
-        resp = JsonResponse({"message": "Refreshed", "access": access}, status=200)
+        resp = JsonResponse({"access": access}, status=200)
         resp["Cache-Control"] = "no-store"
         resp["Pragma"] = "no-cache"
 
-        access_max_age = int(settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].total_seconds())
-        refresh_max_age = int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds())
-
-        resp.set_cookie("access", access, **_cookie_opts(access_max_age, httponly=False))
-
-        # Rotate cookie if provided
+        # If rotating, issue a new refresh cookie
         if "refresh" in serializer.validated_data:
             new_refresh = str(serializer.validated_data["refresh"])
-            resp.set_cookie("refresh", new_refresh, **_cookie_opts(refresh_max_age))
+            resp.set_cookie(
+                "jwt",
+                new_refresh,
+                httponly=True,
+                secure=settings.SESSION_COOKIE_SECURE,
+                samesite=settings.SESSION_COOKIE_SAMESITE,
+                path="/",
+                max_age=int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds())
+            )
 
-        # Optional: refresh CSRF cookie
-        resp.set_cookie(
-            settings.CSRF_COOKIE_NAME,
-            get_token(request),
-            secure=settings.SESSION_COOKIE_SECURE,
-            samesite=settings.SESSION_COOKIE_SAMESITE,
-            path="/",
-        )
         return resp
 
     def get(self, request, *args, **kwargs):
@@ -203,18 +169,21 @@ class CookieTokenRefreshView(TokenRefreshView):
     def post(self, request, *args, **kwargs):
         return self._refresh_from_cookie(request)
 
+
 #clear access token upon logout
 class CookieLogoutView(APIView):
-    """POST — clears cookies and (optionally) blacklists the refresh token."""
+    """POST — clears jwt cookie and optionally blacklists token."""
     def post(self, request):
-        refresh_token = request.COOKIES.get("refresh")
-        if refresh_token:
+        jwt_token = request.COOKIES.get("jwt")
+        if jwt_token:
             try:
-                RefreshToken(refresh_token).blacklist()
+                RefreshToken(jwt_token).blacklist()
             except Exception:
                 pass
         django_logout(request)
-        resp = JsonResponse({"message": "Logged out"})
-        for name in ("access", "refresh", settings.CSRF_COOKIE_NAME):
-            resp.delete_cookie(name, path="/")
+        resp = JsonResponse({"message": "Logged out"}, status=200)
+        resp["Cache-Control"] = "no-store"
+        resp["Pragma"] = "no-cache"
+        resp.delete_cookie("jwt", path="/")
         return resp
+
