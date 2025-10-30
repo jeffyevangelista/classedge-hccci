@@ -4,7 +4,7 @@ import privateRoutes from "./private";
 
 const apiRoutes = Router();
 
-apiRoutes.use("/pub", publicRoutes);
-apiRoutes.use("/pvt", privateRoutes);
+apiRoutes.use(publicRoutes);
+apiRoutes.use(privateRoutes);
 
 export default apiRoutes;
