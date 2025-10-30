@@ -32,6 +32,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'default-secret-key')
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
+# ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS').split(",")
 
 
 # Application definition
@@ -222,6 +223,7 @@ SIMPLE_JWT = {
     "ALGORITHM": "HS256",
     # "SIGNING_KEY": SECRET_KEY,  # default is SECRET_KEY; keep it this way
     "AUTH_HEADER_TYPES": ("Bearer",),
+    "TOKEN_OBTAIN_SERIALIZER": "accounts.serializers.MyTokenObtainPairSerializer",
 }
 
 AUTHENTICATION_BACKENDS = (
