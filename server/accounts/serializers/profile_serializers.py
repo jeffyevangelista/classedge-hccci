@@ -14,6 +14,8 @@ class UserSerializer(serializers.ModelSerializer):
     course = serializers.SerializerMethodField()
     department_id = serializers.IntegerField(source='department.id', read_only=True)
     course_id = serializers.IntegerField(source='course.id', read_only=True)
+    permissions = serializers.SerializerMethodField()
+
 
     class Meta:
         model = Profile
@@ -23,6 +25,7 @@ class UserSerializer(serializers.ModelSerializer):
             'last_name',
             'email',
             'role',
+            'permissions', 
             'password',
             'date_of_birth',
             'gender',
@@ -81,6 +84,12 @@ class UserSerializer(serializers.ModelSerializer):
     def get_course(self, instance):
         """Return course name if assigned"""
         return instance.course.name if instance.course else None
+
+    def get_permissions(self, instance):
+        """Return list of permission codenames from the role"""
+        if instance.role:
+            return [perm.codename for perm in instance.role.permissions.all()]
+        return []
 
     @transaction.atomic
     def create(self, validated_data):

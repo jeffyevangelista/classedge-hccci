@@ -6,7 +6,7 @@ from .certificate_serializers import CertificateSerializer
 from .course_serializers import CourseSerializer
 from .department_serializers import DepartmentSerializer
 from .display_image_serializers import DisplayImageSerializer
-from .role_serializers import RoleSerializer
+from .role_serializers import RoleSerializer, CustomUserSerializer
 from .profile_serializers import UserSerializer, MyTokenObtainPairSerializer
 from .login_history_serializers import LoginHistorySerializer
 
@@ -38,6 +38,7 @@ __all__ = [
             
             # Permission Serializers
             'PermissionSerializer',
+            'CustomUserSerializer',
         ]
 
 
