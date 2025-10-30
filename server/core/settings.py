@@ -218,8 +218,8 @@ SIMPLE_JWT = {
     "USER_ID_CLAIM": "user_id", 
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
-    "ROTATE_REFRESH_TOKENS": True,
-    "BLACKLIST_AFTER_ROTATION": True,
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": False,
     "ALGORITHM": "HS256",
     # "SIGNING_KEY": SECRET_KEY,  # default is SECRET_KEY; keep it this way
     "AUTH_HEADER_TYPES": ("Bearer",),
