@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useMsal } from "@azure/msal-react";
 import { InteractionRequiredAuthError } from "@azure/msal-browser";
 import { Button } from "@/components/ui/button";
-import { Field, FieldLabel } from "@/components/ui/field";
+import { Field } from "@/components/ui/field";
 import MSLogo from "@/assets/ms-logo.svg";
 import { MICROSOFT_CLIENT_ID, MICROSOFT_TENANT_ID } from "@/utils/env";
 import { useMsAuth } from "../auth.hooks";
@@ -66,7 +66,6 @@ const MSAuthButton = () => {
 
   return (
     <Field>
-      <FieldLabel>Sign in with</FieldLabel>
       <Button
         variant="outline"
         type="button"

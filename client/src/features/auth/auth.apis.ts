@@ -14,3 +14,11 @@ export const msAuth = async (token: string | null) => {
     })
   ).data;
 };
+
+export const refresh = async () => {
+  return (await api.get("/auth/refresh/")).data;
+};
+
+export const currentUser = async () => {
+  return (await api.get("/profiles/me/")).data;
+};
