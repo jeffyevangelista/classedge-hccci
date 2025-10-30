@@ -9,7 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Link, useNavigate } from "react-router";
 import { useLogin } from "../auth.hooks";
-import { Loader } from "lucide-react";
+import { CircleX, Loader } from "lucide-react";
 // import ReCAPTCHA from "react-google-recaptcha";
 // import { SITE_KEY } from "@/utils/env";
 import { Controller, useForm } from "react-hook-form";
@@ -17,10 +17,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema, type LoginFormValues } from "../auth.schemas";
 import type { LoginCredentials } from "../auth.types";
 import MSAuthButton from "./MSAuthButton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export function LoginForm() {
   const navigate = useNavigate();
-  const { mutateAsync: login, isPending } = useLogin();
+  const { mutateAsync: login, isPending, isError, error } = useLogin();
 
   const {
     handleSubmit,
@@ -48,6 +49,14 @@ export function LoginForm() {
             A learning Platform of HCCCI
           </p>
         </div>
+
+        {isError && (
+          <Alert variant="destructive" className="items-center">
+            <CircleX />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error.message}</AlertDescription>
+          </Alert>
+        )}
         <Field>
           <FieldLabel htmlFor="email">Email</FieldLabel>
           <Controller
@@ -117,7 +126,7 @@ export function LoginForm() {
           </Button>
         </Field>
         <FieldSeparator>or continue with</FieldSeparator>
-        <MSAuthButton />
+        {/* <MSAuthButton /> */}
       </FieldGroup>
     </form>
   );
