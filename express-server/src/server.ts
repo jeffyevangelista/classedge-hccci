@@ -1,5 +1,5 @@
 import app from "./app";
-import { PORT } from "./utils/env";
+import { PORT } from "./lib/env";
 
 // Start the server
 app.listen(PORT, () => {

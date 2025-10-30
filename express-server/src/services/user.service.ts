@@ -12,6 +12,15 @@ export const findUserByEmailService = async (email: string) => {
   return user;
 };
 
+export const findUserByIdService = async (userId: string) => {
+  const [user] = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.userId, userId));
+
+  return user;
+};
+
 export const createUserService = async (payload: UserInsert) => {
   const [createdUser] = await db.insert(usersTable).values(payload).returning();
 
