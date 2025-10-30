@@ -30,6 +30,7 @@ urlpatterns = [
             path("auth/login/",   CookieTokenObtainPairView.as_view(), name="jwt-login"),
             path("auth/refresh/", CookieTokenRefreshView.as_view(),    name="jwt-refresh"),
             path("auth/logout/",  CookieLogoutView.as_view(),          name="jwt-logout"),
+            
 
             # Other custom endpoints
             path("microsoft/login/", oauth2_login, name="microsoft_login"),
@@ -39,5 +40,5 @@ urlpatterns = [
         ])
     ),
     
-
+#test
 ]
