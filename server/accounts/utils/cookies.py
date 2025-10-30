@@ -11,7 +11,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny
 
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError, AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
 from rest_framework_simplejwt.settings import api_settings
@@ -37,6 +37,17 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
         role = getattr(user, "role", None)
         token["roles"] = [role] if role else []
         return token
+
+    def validate(self, attrs):
+        try:
+            data = super().validate(attrs)
+        except AuthenticationFailed:
+            # already raised by DRF as {"detail": "..."} — rethrow cleanly
+            raise AuthenticationFailed(detail="Incorrect email or password.")
+        except Exception:
+            # catch other errors (e.g., inactive user)
+            raise AuthenticationFailed(detail="Incorrect email or password.")
+        return data
 
 
 class MinimalTokenRefreshSerializer(TokenRefreshSerializer):
@@ -181,7 +192,7 @@ class CookieLogoutView(APIView):
             except Exception:
                 pass
         django_logout(request)
-        resp = JsonResponse({"message": "Logged out"}, status=200)
+        resp = JsonResponse({"detail": "Logged out"}, status=200)
         resp["Cache-Control"] = "no-store"
         resp["Pragma"] = "no-cache"
         resp.delete_cookie("jwt", path="/")

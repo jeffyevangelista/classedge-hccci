@@ -332,7 +332,7 @@ class CookieLogoutView(APIView):
 
 
         django_logout(request)
-        resp = JsonResponse({"message": "Logged out"})
+        resp = JsonResponse({"detail": "Logged out"})
         for name in ("access","refresh", settings.CSRF_COOKIE_NAME):
             resp.delete_cookie(name, path="/")
         return resp
