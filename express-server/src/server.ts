@@ -1,6 +1,5 @@
 import app from "./app";
-
-const PORT = 3000;
+import { PORT } from "./utils/env";
 
 // Start the server
 app.listen(PORT, () => {

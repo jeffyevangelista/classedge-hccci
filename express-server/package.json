@@ -13,12 +13,18 @@
   "license": "ISC",
   "packageManager": "pnpm@10.13.1",
   "dependencies": {
-    "express": "^5.1.0"
+    "@paralleldrive/cuid2": "^3.0.4",
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.44.7",
+    "express": "^5.1.0",
+    "pg": "^8.16.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.5",
     "@types/http-errors": "^2.0.5",
     "@types/node": "^24.9.2",
+    "@types/pg": "^8.15.6",
+    "drizzle-kit": "^0.31.6",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   }
