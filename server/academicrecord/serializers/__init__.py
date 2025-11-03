@@ -10,8 +10,8 @@ from .term_category_serializers import TermCategorySerializer
 __all__ = [
             # Role Serializers
             'EnrollmentSerializer',
-            'SemesterSerializer',
-            'TermSerializer',
+            'SemesterSerializer', 'SemesterCategorySerializer',
+            'TermSerializer', 'TermCategorySerializer',
             'AcademicYearSerializer',
             'SemesterCategorySerializer',
             'TermCategorySerializer',
