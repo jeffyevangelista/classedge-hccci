@@ -12,7 +12,7 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const { accessToken } = useStore.getState();
+  const accessToken = useStore.getState().accessToken;
 
   if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
 
@@ -23,17 +23,25 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-
-    if (error.response.status == 401 && !originalRequest._retry) {
+    const { accessToken, setCredentials, clearCredentials } =
+      useStore.getState();
+    if (
+      (error.response.status == 401 || error.response.status == 403) &&
+      !originalRequest._retry
+    ) {
       originalRequest._retry = true;
 
-      try {
-        const { access } = await refresh();
-        useStore.getState().setCredentials(access);
-        originalRequest.headers.Authorization = `Bearer ${access}`;
-        return api(originalRequest);
-      } catch (error) {
-        useStore.getState().clearCredentials();
+      if (accessToken) {
+        try {
+          const { access } = await refresh();
+          setCredentials(access);
+          originalRequest.headers.Authorization = `Bearer ${access}`;
+          return api(originalRequest);
+        } catch (error) {
+          console.log("Session expired");
+          clearCredentials();
+          return Promise.reject(error);
+        }
       }
     }
 
