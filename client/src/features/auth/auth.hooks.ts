@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { LoginCredentials } from "./auth.types";
-import { currentUser, login, msAuth } from "./auth.apis";
+import { currentUser, login, msAuth, refresh } from "./auth.apis";
 import useStore from "@/lib/store";
 import { useNavigate } from "react-router";
 
@@ -38,5 +38,15 @@ export const useCurrentUser = () => {
     queryKey: ["current-user"],
     queryFn: currentUser,
     enabled: useStore.getState().isAuthenticated,
+  });
+};
+
+export const useRefresh = () => {
+  return useMutation({
+    mutationKey: ["refresh"],
+    mutationFn: async () => {
+      const data = await refresh();
+      useStore.getState().setCredentials(data.access);
+    },
   });
 };

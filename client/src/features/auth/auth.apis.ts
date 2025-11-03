@@ -16,7 +16,7 @@ export const msAuth = async (token: string | null) => {
 };
 
 export const refresh = async () => {
-  return (await api.get("/auth/refresh/")).data;
+  return (await api.post("/auth/refresh/")).data;
 };
 
 export const currentUser = async () => {
