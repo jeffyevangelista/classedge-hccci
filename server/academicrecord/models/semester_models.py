@@ -1,8 +1,8 @@
 from django.db import models
 
 class Semester(models.Model):
-    academic_year = models.ForeignKey('AcademicYear', on_delete=models.PROTECT)
-    semester_category = models.ForeignKey('SemesterCategory', on_delete=models.PROTECT, null=True, blank=True)
+    academic_year_id = models.ForeignKey('AcademicYear', on_delete=models.PROTECT)
+    semester_category_id = models.ForeignKey('SemesterCategory', on_delete=models.PROTECT, null=True, blank=True)
     start_date = models.DateField()
     end_date = models.DateField()
     passing_grade = models.DecimalField(max_digits=5, decimal_places=2)
@@ -14,5 +14,5 @@ class Semester(models.Model):
         return f"{self.academic_year} - {self.semester_category.name}"
 
     class Meta:
-        unique_together = ('academic_year', 'semester_category')
+        unique_together = ('academic_year_id', 'semester_category_id')
 
