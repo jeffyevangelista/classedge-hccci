@@ -2,7 +2,7 @@ from django.db import models
 
 class Semester(models.Model):
     academic_year_id = models.ForeignKey('AcademicYear', on_delete=models.PROTECT)
-    semester_category_id = models.ForeignKey('SemesterCategory', on_delete=models.PROTECT, null=True, blank=True)
+    semester_category_id = models.ForeignKey('SemesterCategory', on_delete=models.PROTECT)
     start_date = models.DateField()
     end_date = models.DateField()
     passing_grade = models.DecimalField(max_digits=5, decimal_places=2)
