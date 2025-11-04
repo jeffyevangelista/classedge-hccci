@@ -2,10 +2,10 @@ from django.db import models
 from django.conf import settings
 
 class SubjectOffering(models.Model):
-    subject = models.ForeignKey('Subject', on_delete=models.CASCADE)
-    teacher = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='teacher_subject_offerings', on_delete=models.PROTECT)
+    subject_id = models.ForeignKey('Subject', on_delete=models.PROTECT,null=True,blank=True)
+    teacher_id = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='teacher_subject_offerings', on_delete=models.PROTECT,null=True,blank=True)
     collaborators = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='collaborator', blank=True)
-    semester = models.ForeignKey('academicrecord.Semester', on_delete=models.CASCADE)
+    semester_id = models.ForeignKey('academicrecord.Semester', on_delete=models.PROTECT,null=True,blank=True)
     max_enrollee = models.IntegerField()
     current_enrollee = models.IntegerField()
     duration_start = models.DateField()
@@ -13,4 +13,4 @@ class SubjectOffering(models.Model):
     
     def __str__(self):
         collaborators = ", ".join([str(c) for c in self.collaborators.all()]) if self.collaborators.exists() else "No collaborators"
-        return f"{self.subject} - {self.semester} - {self.teacher} ({collaborators})"
+        return f"{self.subject_id} - {self.semester_id} - {self.teacher_id} ({collaborators})"

@@ -20,7 +20,7 @@ class Subject(models.Model):
     current_enrollee = models.IntegerField()
     duration = models.CharField(max_length=255)
     partner_institution = models.CharField(max_length=255)
-    target_sdgs = models.ManyToManyField('SDG', related_name='subjects')
+    target_sdgs_id = models.ManyToManyField('SDG', related_name='subjects')
     country = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(null=True, blank=True)

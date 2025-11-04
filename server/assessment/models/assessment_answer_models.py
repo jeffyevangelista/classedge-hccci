@@ -8,9 +8,9 @@ class AssessmentAnswer(models.Model):
         ('graded', 'Graded'),
     ]
     
-    attempt = models.ForeignKey('AssessmentAttempt', on_delete=models.PROTECT, related_name='answers', null=True, blank=True)
-    question = models.ForeignKey('AssessmentQuestion', on_delete=models.PROTECT, related_name='answers', null=True, blank=True)
-    assessment_choice = models.ForeignKey('AssessmentChoice', on_delete=models.PROTECT, related_name='answers', null=True, blank=True)
+    attempt_id = models.ForeignKey('AssessmentAttempt', on_delete=models.PROTECT, related_name='answers', null=True, blank=True)
+    question_id = models.ForeignKey('AssessmentQuestion', on_delete=models.PROTECT, related_name='answers', null=True, blank=True)
+    assessment_choice_id = models.ForeignKey('AssessmentChoice', on_delete=models.PROTECT, related_name='answers', null=True, blank=True)
     answer_text = models.TextField(blank=True)
     score_awarded = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     grading_status = models.CharField(max_length=20, choices=GRADING_STATUS_CHOICES, default='pending_review')

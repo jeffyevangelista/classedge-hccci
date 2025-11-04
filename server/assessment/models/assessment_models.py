@@ -3,8 +3,8 @@ from django.conf import settings
 
 class Assessment(models.Model):
     title = models.CharField(max_length=100)
-    subject = models.ForeignKey('teachingload.Subject', on_delete=models.PROTECT, related_name='assessments', null=True, blank=True)
-    teacher = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='assessments', null=True, blank=True)
+    subject_id = models.ForeignKey('teachingload.Subject', on_delete=models.PROTECT, related_name='assessments', null=True, blank=True)
+    teacher_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='assessments', null=True, blank=True)
     instruction = models.TextField(null=True, blank=True)
     available_at = models.DateTimeField()
     due_at = models.DateTimeField()
@@ -18,9 +18,9 @@ class Assessment(models.Model):
         ('first', 'First Take'),
     ]
     scoring_policy = models.CharField(max_length=100, choices=SCORING_POLICY_TYPE)
-    term = models.ForeignKey('academicrecord.Term', on_delete=models.PROTECT, related_name='assessments', null=True, blank=True)
-    material = models.ManyToManyField('materials.Material', related_name='assessments', blank=True)
-    submission_type = models.ForeignKey('SubmissionType', on_delete=models.PROTECT, related_name='assessments', null=True, blank=True)
+    term_id = models.ForeignKey('academicrecord.Term', on_delete=models.PROTECT, related_name='assessments', null=True, blank=True)
+    material_id = models.ManyToManyField('materials.Material', related_name='assessments', blank=True)
+    submission_type_id = models.ForeignKey('SubmissionType', on_delete=models.PROTECT, related_name='assessments', null=True, blank=True)
     max_score = models.DecimalField(max_digits=5, decimal_places=2)
     PASSING_SCORE_TYPE =[   
         ('number', 'Number'),

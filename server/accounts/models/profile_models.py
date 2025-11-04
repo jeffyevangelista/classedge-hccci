@@ -8,8 +8,8 @@ def get_upload_path_profile(instance, filename):
     return os.path.join('profile', filename)
 
 class Profile(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True)
-    role = models.ForeignKey('Role', on_delete=models.SET_NULL, null=True, blank=True)
+    user_id = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, null=True, blank=True)
+    role_id = models.ForeignKey('Role', on_delete=models.SET_NULL, null=True, blank=True)
     status = models.BooleanField(default=True, null=True, blank=True)
     STATUS_TYPE = [
         ('Regular', 'Regular'),
