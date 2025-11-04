@@ -16,7 +16,6 @@ urlpatterns = [
         include([
             path("", include(router.urls)),
 
-            path("academic-years/all/", GenericAcademicYearViewSet.as_view(), name="academic-year-generic-view"),
         ])
     ),
 
