@@ -6,5 +6,4 @@ class AcademicYearSerializer(serializers.ModelSerializer):
         model = AcademicYear
         fields = '__all__'
 
-
     
