@@ -8,7 +8,7 @@ def get_upload_path_badge(instance, filename):
     return f'badges/{uuid.uuid4()}{ext}'
 
 class Badge(models.Model):
-    profiles = models.ManyToManyField('Profile', related_name='badges')
+    profile_id = models.ManyToManyField('Profile', related_name='badges')
     name = models.CharField(max_length=255)
     image = models.ImageField(upload_to=get_upload_path_badge)
     description = models.TextField(null=True, blank=True)

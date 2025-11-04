@@ -8,7 +8,7 @@ def get_upload_path_certificate(instance, filename):
     return f'certificate/{uuid.uuid4()}{ext}'
 
 class Certificate(models.Model):
-    profiles = models.ManyToManyField('Profile', related_name='certificates')
+    profile_id = models.ManyToManyField('Profile', related_name='certificates')
     title = models.CharField(max_length=255)
     file = models.ImageField(upload_to=get_upload_path_certificate)
     issued_date = models.DateField(default=now)

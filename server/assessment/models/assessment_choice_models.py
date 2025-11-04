@@ -1,7 +1,7 @@
 from django.db import models
 
 class AssessmentChoice(models.Model):
-    question = models.ForeignKey('AssessmentQuestion', on_delete=models.PROTECT, related_name='choices', null=True, blank=True)
+    question_id = models.ForeignKey('AssessmentQuestion', on_delete=models.PROTECT, related_name='choices', null=True, blank=True)
     choice_text = models.TextField()
     is_correct = models.BooleanField(default=False)
     order_index = models.IntegerField()

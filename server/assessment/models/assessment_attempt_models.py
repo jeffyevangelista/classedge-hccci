@@ -3,8 +3,8 @@ from django.conf import settings
 
 # Student Record
 class AssessmentAttempt(models.Model):
-    assessment = models.ForeignKey('Assessment', on_delete=models.PROTECT, related_name='attempts', null=True, blank=True)
-    student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='attempts', null=True, blank=True)
+    assessment_id = models.ForeignKey('Assessment', on_delete=models.PROTECT, related_name='attempts', null=True, blank=True)
+    student_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name='attempts', null=True, blank=True)
     attempt_number = models.IntegerField()
     started_at = models.DateTimeField(auto_now_add=True)
     is_late = models.BooleanField(default=False)
