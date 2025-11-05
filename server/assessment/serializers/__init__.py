@@ -4,7 +4,7 @@ from .assessment_choice_serializers import AssessmentChoiceSerializer
 from .assessment_question_serializers import AssessmentQuestionSerializer
 from .assessment_result_serializers import AssessmentResultSerializer
 from .assessment_serializers import AssessmentSerializer
-from .assessment_type_serializers import AssessmentTypeSerializer
+from .question_type_serializers import QuestionTypeSerializer
 from .submission_serializers import SubmissionTypeSerializer
 
 __all__ = [
@@ -14,6 +14,6 @@ __all__ = [
     "AssessmentQuestionSerializer",
     "AssessmentResultSerializer",
     "AssessmentSerializer",
-    "AssessmentTypeSerializer",
+    "QuestionTypeSerializer",
     "SubmissionTypeSerializer"
 ]

@@ -10,7 +10,6 @@ from common.pagination import CustomPagination
 from rest_framework.authentication import SessionAuthentication
 from accounts.utils import CookieJWTAuthentication
 from rest_framework.permissions import IsAuthenticated
-from django.utils import timezone
 
 class AssessmentAnswerViewSet(ModelViewSet):
     serializer_class = AssessmentAnswerSerializer
@@ -131,7 +130,6 @@ class AssessmentAnswerViewSet(ModelViewSet):
         answer.feedback = feedback
         answer.grading_status = 'graded'
         answer.graded_by = request.user
-        answer.graded_at = timezone.now()
         answer.save()
         
         # Recalculate attempt score

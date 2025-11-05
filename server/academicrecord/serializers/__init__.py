@@ -1,20 +1,26 @@
 
 from .enrollment_serializers import EnrollmentSerializer
-from .semester_serializers import SemesterSerializer
-from .term_serializers import TermSerializer
+from .academic_term_serializers import AcademicTermSerializer
+from .academic_term_category_serializers import AcademicTermCategorySerializer
 from .acedemic_year_serializers import AcademicYearSerializer
-from .semester_category_serializers import SemesterCategorySerializer
-from .term_category_serializers import TermCategorySerializer
+from .grading_period_serializers import GradingPeriodSerializer
+from .grading_period_category_serializers import GradingPeriodCategorySerializer
 
 
 __all__ = [
-            # Role Serializers
+            # Enrollment
             'EnrollmentSerializer',
-            'SemesterSerializer', 'SemesterCategorySerializer',
-            'TermSerializer', 'TermCategorySerializer',
+
+            # Academic Term
+            'AcademicTermSerializer', 
+            'AcademicTermCategorySerializer',
+
+            # Academic Year
             'AcademicYearSerializer',
-            'SemesterCategorySerializer',
-            'TermCategorySerializer',
+            
+            # Grading Period
+            'GradingPeriodSerializer',
+            'GradingPeriodCategorySerializer',
         ]
 
 

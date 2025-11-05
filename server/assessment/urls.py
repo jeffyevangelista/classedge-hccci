@@ -9,7 +9,7 @@ router.register(r'assessment-choices', AssessmentChoiceViewSet, basename='assess
 router.register(r'assessment-attempts', AssessmentAttemptViewSet, basename='assessment-attempts')
 router.register(r'assessment-answers', AssessmentAnswerViewSet, basename='assessment-answers')
 router.register(r'assessment-results', AssessmentResultViewSet, basename='assessment-results')
-router.register(r'assessment-types', AssessmentTypeViewSet, basename='assessment-types')
+router.register(r'question-types', QuestionTypeViewSet, basename='question-types')
 router.register(r'submission-types', SubmissionTypeViewSet, basename='submission-types')
 
 urlpatterns = [

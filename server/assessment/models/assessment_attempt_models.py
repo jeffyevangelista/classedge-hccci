@@ -15,4 +15,4 @@ class AssessmentAttempt(models.Model):
     updated_at = models.DateTimeField(null=True, blank =True)
         
     def __str__(self):
-        return f"{self.student} - {self.assessment.title} - Attempt {self.attempt_number}"
+        return f"{self.student_id} - {self.assessment_id.title} - Attempt {self.attempt_number}"
