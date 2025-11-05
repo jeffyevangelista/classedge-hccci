@@ -14,7 +14,7 @@ class AcademicTermCategoryViewSet(ModelViewSet):
     pagination_class = CustomPagination
     
     def get_queryset(self):
-        return self.serializer_class.Meta.model.objects.all().order_by('-created_at')
+        return self.serializer_class.Meta.model.objects.all()
 
     # Non-paginated endpoint: /api/academic-term-categories/all/
     @action(detail=False, methods=['get'], url_path='all')
