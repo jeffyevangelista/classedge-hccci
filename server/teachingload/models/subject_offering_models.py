@@ -6,6 +6,7 @@ class SubjectOffering(models.Model):
     teacher_id = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='teacher_subject_offerings', on_delete=models.PROTECT,null=True,blank=True)
     collaborators = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='collaborator', blank=True)
     academic_term_id = models.ForeignKey('academicrecord.AcademicTerm', on_delete=models.PROTECT,null=True,blank=True)
+    schedule_id = models.ForeignKey('Schedule', on_delete=models.PROTECT,null=True,blank=True)
     max_enrollee = models.IntegerField(null=True, blank=True)
     current_enrollee = models.IntegerField(null=True, blank=True)
     duration_start = models.DateField(null=True, blank=True)

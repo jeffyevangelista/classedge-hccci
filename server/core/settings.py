@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    'django_filters',
     
     # Allauth (social authentication)
     'allauth',
@@ -255,6 +256,9 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ),
     'EXCEPTION_HANDLER': 'accounts.utils.exceptions.custom_exception_handler',
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend'
+    ],
 }
 
 

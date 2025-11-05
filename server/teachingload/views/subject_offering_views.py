@@ -5,11 +5,13 @@ from accounts.utils import CookieJWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from common.pagination import CustomPagination
 
 class SubjectOfferingViewSet(viewsets.ModelViewSet):
     serializer_class = SubjectOfferingSerializer
     authentication_classes = [SessionAuthentication, CookieJWTAuthentication]
     permission_classes = [IsAuthenticated]
+    pagination_class = CustomPagination
     
     def get_queryset(self):
         return self.serializer_class.Meta.model.objects.all().order_by('-created_at')
