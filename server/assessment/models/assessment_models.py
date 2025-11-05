@@ -18,7 +18,7 @@ class Assessment(models.Model):
         ('first', 'First Take'),
     ]
     scoring_policy = models.CharField(max_length=100, choices=SCORING_POLICY_TYPE)
-    term_id = models.ForeignKey('academicrecord.Term', on_delete=models.PROTECT, related_name='assessments', null=True, blank=True)
+    grading_period_id = models.ForeignKey('academicrecord.GradingPeriod', on_delete=models.PROTECT, related_name='assessments', null=True, blank=True)
     material_id = models.ManyToManyField('materials.Material', related_name='assessments', blank=True)
     submission_type_id = models.ForeignKey('SubmissionType', on_delete=models.PROTECT, related_name='assessments', null=True, blank=True)
     max_score = models.DecimalField(max_digits=5, decimal_places=2)

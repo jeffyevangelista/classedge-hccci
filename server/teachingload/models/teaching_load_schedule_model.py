@@ -15,7 +15,7 @@ class Schedule(models.Model):
     days = models.CharField(max_length=255, choices=DAYS_OF_WEEK)
     start_time = models.TimeField()
     end_time = models.TimeField()
-    semester_id = models.ForeignKey('academicrecord.Semester', related_name='teaching_load_schedules', on_delete=models.PROTECT,null=True,blank=True)
+    academic_term_id = models.ForeignKey('academicrecord.AcademicTerm', related_name='teaching_load_schedules', on_delete=models.PROTECT,null=True,blank=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     updated_at = models.DateTimeField(null=True, blank=True)
     
