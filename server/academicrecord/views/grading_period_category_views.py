@@ -10,5 +10,5 @@ class GradingPeriodCategoryViewSet(ModelViewSet):
     permission_classes = [IsAuthenticated]
     
     def get_queryset(self):
-        return self.serializer_class.Meta.model.objects.all()
+        return self.serializer_class.Meta.model.objects.all().order_by('-created_at')
 
