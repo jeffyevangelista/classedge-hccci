@@ -1,7 +1,7 @@
 from django.db import models
 
 class GradingPeriod(models.Model):
-    grading_period_category_id = models.ForeignKey('GradingPeriodCategory', on_delete=models.CASCADE, null=True, blank=True)
+    grading_period_category_id = models.ForeignKey('GradingPeriodCategory', on_delete=models.CASCADE)
     academic_term_id = models.ForeignKey('AcademicTerm', on_delete=models.CASCADE)
     start_date = models.DateField()
     end_date = models.DateField()

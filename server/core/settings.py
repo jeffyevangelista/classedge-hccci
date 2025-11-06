@@ -290,7 +290,7 @@ SOCIALACCOUNT_PROVIDERS = {
             'scope': 'email openid profile offline_access User.Read OnlineMeetings.ReadWrite Calendars.ReadWrite'
         },
         'TENANT': os.getenv('MICROSOFT_TENANT', ''),
-        'REDIRECT_URI': 'http://localhost:8000/api/microsoft/login/callback/',
+        'REDIRECT_URI': os.getenv('MICROSOFT_REDIRECT_URI', 'http://localhost:8000/api/microsoft/login/callback/'),
     }
 }
 
