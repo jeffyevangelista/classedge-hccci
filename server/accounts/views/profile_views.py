@@ -87,101 +87,109 @@ def oauth2_login(request):
     request.session["code_verifier"] = code_verifier
     request.session.save() 
 
+    redirect_uri = settings.SOCIALACCOUNT_PROVIDERS['microsoft']['REDIRECT_URI']
     auth_url = (
         f"https://login.microsoftonline.com/{settings.MS_TENANT_ID}/oauth2/v2.0/authorize"
         f"?client_id={settings.MS_CLIENT_ID}"
         f"&response_type=code"
-        f"&redirect_uri=http://localhost:8000/api/microsoft/login/callback/"
+        f"&redirect_uri={redirect_uri}"
         f"&response_mode=query"
         f"&scope=openid profile email User.Read"
         f"&code_challenge={code_challenge}"
         f"&code_challenge_method=S256"
     )
 
-    # 🔹 Instead of returning JSON, redirect the user to Microsoft’s login page
+    # Instead of returning JSON, redirect the user to Microsoft’s login page
     return redirect(auth_url)
 
 
 def oauth2_callback(request):
     """Handle Microsoft redirect and exchange code for tokens"""
-    code = request.GET.get("code")
-    print("CODE:", code)
-    if not code:
-        return JsonResponse({"error": "Missing authorization code"}, status=400)
+    try:
+        code = request.GET.get("code")
+        print("CODE:", code)
+        if not code:
+            return JsonResponse({"error": "Missing authorization code"}, status=400)
 
-    code_verifier = request.session.get("code_verifier")
-    print("CODE VERIFIER:", code_verifier)
-    if not code_verifier:
-        return JsonResponse({"error": "Missing code_verifier (PKCE)"}, status=400)
+        code_verifier = request.session.get("code_verifier")
+        print("CODE VERIFIER:", code_verifier)
+        if not code_verifier:
+            return JsonResponse({"error": "Missing code_verifier (PKCE)"}, status=400)
 
-    token_url = f"https://login.microsoftonline.com/{settings.MS_TENANT_ID}/oauth2/v2.0/token"
+        token_url = f"https://login.microsoftonline.com/{settings.MS_TENANT_ID}/oauth2/v2.0/token"
+        redirect_uri = settings.SOCIALACCOUNT_PROVIDERS['microsoft']['REDIRECT_URI']
 
-    data = {
-        "client_id": settings.MS_CLIENT_ID,
-        "grant_type": "authorization_code",
-        "code": code,
-        "redirect_uri": "http://localhost:8000/api/microsoft/login/callback/",
-        "code_verifier": code_verifier,
-        "client_secret": settings.MS_CLIENT_SECRET,  # optional if using a public client
-    }
-
-    token_resp = requests.post(token_url, data=data)
-    print("TOKEN RESPONSE:", token_resp.status_code, token_resp.text)
-    token_data = token_resp.json()
-
-    access_token = token_data.get("access_token")
-    if not access_token:
-        return JsonResponse({"error": "Failed to obtain Microsoft token"}, status=400)
-
-    # --- Get user info from Microsoft Graph ---
-    user_resp = requests.get(
-        "https://graph.microsoft.com/v1.0/me",
-        headers={"Authorization": f"Bearer {access_token}"}
-    )
-    user_info = user_resp.json()
-    email = user_info.get("mail") or user_info.get("userPrincipalName")
-
-    user, _ = CustomUser.objects.get_or_create(
-        email=email,
-        defaults={
-            "username": email.split("@")[0],
-            "first_name": user_info.get("givenName", ""),
-            "last_name": user_info.get("surname", "")
+        data = {
+            "client_id": settings.MS_CLIENT_ID,
+            "client_secret": settings.MS_CLIENT_SECRET,
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": redirect_uri,
+            "code_verifier": code_verifier,
         }
-    )
 
-    SocialAccount.objects.update_or_create(
-        user=user,
-        provider="microsoft",
-        defaults={"uid": user_info["id"], "extra_data": user_info}
-    )
+        token_resp = requests.post(token_url, data=data)
+        print("TOKEN RESPONSE:", token_resp.status_code, token_resp.text)
+        token_data = token_resp.json()
 
-    # Log in and issue your own JWT tokens
-    login(request, user)
-    refresh = RefreshToken.for_user(user)
-    access = refresh.access_token
+        access_token = token_data.get("access_token")
+        if not access_token:
+            return JsonResponse({"error": "Failed to obtain Microsoft token"}, status=400)
 
-    resp = JsonResponse({
-        "message": "Microsoft login successful",
-        "email": user.email,
-    })
+        # --- Get user info from Microsoft Graph ---
+        user_resp = requests.get(
+            "https://graph.microsoft.com/v1.0/me",
+            headers={"Authorization": f"Bearer {access_token}"}
+        )
+        user_info = user_resp.json()
+        email = user_info.get("mail") or user_info.get("userPrincipalName")
 
-    # Set cookies for JWT
-    access_max_age = int(settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].total_seconds())
-    refresh_max_age = int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds())
+        user, _ = CustomUser.objects.get_or_create(
+            email=email,
+            defaults={
+                "username": email.split("@")[0],
+                "first_name": user_info.get("givenName", ""),
+                "last_name": user_info.get("surname", "")
+            }
+        )
 
-    resp.set_cookie("access", str(access), **_cookie_opts(access_max_age))
-    resp.set_cookie("refresh", str(refresh), **_cookie_opts(refresh_max_age))
+        SocialAccount.objects.update_or_create(
+            user=user,
+            provider="microsoft",
+            defaults={"uid": user_info["id"], "extra_data": user_info}
+        )
 
-    resp.set_cookie(
-        settings.CSRF_COOKIE_NAME,
-        get_token(request),
-        secure=settings.SESSION_COOKIE_SECURE,
-        samesite=settings.SESSION_COOKIE_SAMESITE,
-        path="/",
-    )
+        # Log in and issue your own JWT tokens
+        login(request, user)
+        refresh = RefreshToken.for_user(user)
+        access = refresh.access_token
 
-    return resp
+        resp = JsonResponse({
+            "message": "Microsoft login successful",
+            "email": user.email,
+        })
+
+        # Set cookies for JWT
+        access_max_age = int(settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].total_seconds())
+        refresh_max_age = int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds())
+
+        resp.set_cookie("access", str(access), **_cookie_opts(access_max_age))
+        resp.set_cookie("refresh", str(refresh), **_cookie_opts(refresh_max_age))
+
+        resp.set_cookie(
+            settings.CSRF_COOKIE_NAME,
+            get_token(request),
+            secure=settings.SESSION_COOKIE_SECURE,
+            samesite=settings.SESSION_COOKIE_SAMESITE,
+            path="/",
+        )
+
+        return resp
+    except Exception as e:
+        print(f"Error in oauth2_callback: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 
