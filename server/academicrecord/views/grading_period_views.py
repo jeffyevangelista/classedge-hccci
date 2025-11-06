@@ -20,7 +20,7 @@ class GradingPeriodViewSet(ModelViewSet):
     ordering_fields = ['grading_period_category_id', 'academic_term_id', 'start_date', 'end_date']
     
     def get_queryset(self):
-        return self.serializer_class.Meta.model.objects.all()
+        return self.serializer_class.Meta.model.objects.all().order_by('-created_at')
 
     # Non-paginated endpoint: /api/grading-periods/all/
     @action(detail=False, methods=['get'], url_path='all')

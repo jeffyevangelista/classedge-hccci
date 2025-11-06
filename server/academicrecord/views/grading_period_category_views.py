@@ -3,28 +3,12 @@ from academicrecord.serializers import GradingPeriodCategorySerializer
 from rest_framework.authentication import SessionAuthentication
 from accounts.utils import CookieJWTAuthentication
 from rest_framework.permissions import IsAuthenticated
-from common.pagination import CustomPagination
-from rest_framework.response import Response
-from rest_framework.decorators import action
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import SearchFilter, OrderingFilter
 
 class GradingPeriodCategoryViewSet(ModelViewSet):
     serializer_class = GradingPeriodCategorySerializer
     authentication_classes = [SessionAuthentication, CookieJWTAuthentication]
     permission_classes = [IsAuthenticated]
-    pagination_class = CustomPagination
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['name']
-    search_fields = ['name']
-    ordering_fields = ['name']
     
     def get_queryset(self):
-        return self.serializer_class.Meta.model.objects.all()
+        return self.serializer_class.Meta.model.objects.all().order_by('-created_at')
 
-    # Non-paginated endpoint: /api/grading-period-categories/all/
-    @action(detail=False, methods=['get'], url_path='all')
-    def list_all(self, request):
-        queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
