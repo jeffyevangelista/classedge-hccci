@@ -22,6 +22,8 @@ import base64
 import hashlib
 import os
 from django.shortcuts import redirect
+from django.views.decorators.csrf import csrf_exempt
+from accounts.utils.cookies import _cookie_opts
 
 class ProfileViewSet(ModelViewSet):
     serializer_class = UserSerializer
@@ -78,11 +80,12 @@ def generate_pkce():
     ).decode("utf-8").rstrip("=")
     return code_verifier, code_challenge
 
-
+@csrf_exempt
 def oauth2_login(request):
     """Redirect user to Microsoft login with PKCE"""
     code_verifier, code_challenge = generate_pkce()
     request.session["code_verifier"] = code_verifier
+    request.session.save() 
 
     auth_url = (
         f"https://login.microsoftonline.com/{settings.MS_TENANT_ID}/oauth2/v2.0/authorize"
@@ -167,8 +170,8 @@ def oauth2_callback(request):
     access_max_age = int(settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].total_seconds())
     refresh_max_age = int(settings.SIMPLE_JWT["REFRESH_TOKEN_LIFETIME"].total_seconds())
 
-    resp.set_cookie("access", str(access), **cookie_opts(access_max_age))
-    resp.set_cookie("refresh", str(refresh), **cookie_opts(refresh_max_age))
+    resp.set_cookie("access", str(access), **_cookie_opts(access_max_age))
+    resp.set_cookie("refresh", str(refresh), **_cookie_opts(refresh_max_age))
 
     resp.set_cookie(
         settings.CSRF_COOKIE_NAME,
@@ -179,18 +182,6 @@ def oauth2_callback(request):
     )
 
     return resp
-
-from django.http import JsonResponse
-
-def test_session(request):
-    if "counter" not in request.session:
-        request.session["counter"] = 1
-    else:
-        request.session["counter"] += 1
-    return JsonResponse({
-        "counter": request.session["counter"],
-        "session_key": request.session.session_key
-    })
 
 
 

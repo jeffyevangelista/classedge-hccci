@@ -1,5 +1,5 @@
 
-from .profile_views import ProfileViewSet, oauth2_login, oauth2_callback, test_session  
+from .profile_views import ProfileViewSet, oauth2_login, oauth2_callback  
 from .login_history_views import LoginHistoryViewSet
 from .role_views import RoleViewSet
 from .department_views import DepartmentViewSet
@@ -14,7 +14,6 @@ __all__ = [
             'ProfileViewSet',
             'oauth2_login',
             'oauth2_callback',
-            'test_session',
             
             # Login History
             'LoginHistoryViewSet',
