@@ -6,6 +6,7 @@ import { Field } from "@/components/ui/field";
 import MSLogo from "@/assets/ms-logo.svg";
 import { MICROSOFT_CLIENT_ID, MICROSOFT_TENANT_ID } from "@/utils/env";
 import { useMsAuth } from "../auth.hooks";
+import { Loader } from "lucide-react";
 
 // 🔧 Configuration
 export const msalConfig = {
@@ -32,6 +33,8 @@ const MSAuthButton = () => {
         account,
       });
       setAccessToken(response.accessToken);
+      console.log(response);
+
       console.log("✅ Microsoft token acquired & sent to backend!");
     } catch (error) {
       if (error instanceof InteractionRequiredAuthError) {
@@ -73,6 +76,7 @@ const MSAuthButton = () => {
         disabled={isLoading}
         className="flex items-center gap-2"
       >
+        {isLoading && <Loader className="animate-spin" />}
         <img src={MSLogo} alt="Microsoft logo" className="w-4 h-4" />
         Microsoft
       </Button>

@@ -1,16 +1,18 @@
 import { Route, Routes } from "react-router";
-import LoginPage from "./pages/auth/LoginPage";
+import LoginPage from "@/pages/auth/LoginPage";
 import RootLayout from "@/components/root-layout";
-import DashboardPage from "./pages/dashboard/DashboardPage";
-import ForgotPasswordPage from "./pages/auth/forgot-password/ForgotPasswordPage";
-import VerifyOtpPage from "./pages/auth/forgot-password/VerifyOtpPage";
-import ResetPasswordPage from "./pages/auth/forgot-password/ResetPasswordPage";
-import { AuthGuard } from "./features/auth/components/AuthGuard";
-import { useAuthInit } from "./features/auth/auth.init";
-import PersistAuth from "./features/auth/components/PersistAuth";
+import DashboardPage from "@/pages/dashboard/DashboardPage";
+import ForgotPasswordPage from "@/pages/auth/forgot-password/ForgotPasswordPage";
+import VerifyOtpPage from "@/pages/auth/forgot-password/VerifyOtpPage";
+import ResetPasswordPage from "@/pages/auth/forgot-password/ResetPasswordPage";
+import PersistAuth from "@/features/auth/components/PersistAuth";
+import DashboardLayout from "@/components/dashboard-layout";
+import AcademicYearsPage from "@/pages/academic-settings/AcademicYearsPage";
+import SemestersPage from "@/pages/academic-settings/AcademicTermsPage";
+import TermsPage from "@/pages/academic-settings/TermsPage";
+import AcademicYearDetailsPage from "@/pages/academic-settings/AcademicYearDetailsPage";
 
 function App() {
-  // useAuthInit();
   return (
     <Routes>
       <Route element={<PersistAuth />}>
@@ -23,9 +25,20 @@ function App() {
 
           {/* Dashboard routes */}
 
-          {/* <Route element={<AuthGuard />}> */}
-          <Route path="dashboard" element={<DashboardPage />} />
-          {/* </Route> */}
+          <Route element={<DashboardLayout />}>
+            <Route path="dashboard" element={<DashboardPage />} />
+
+            {/* Academic Settings */}
+            <Route path="academic-years">
+              <Route index element={<AcademicYearsPage />} />
+              <Route path=":ayId">
+                <Route index element={<AcademicYearDetailsPage />} />
+              </Route>
+            </Route>
+
+            <Route path="semesters" element={<SemestersPage />} />
+            <Route path="terms" element={<TermsPage />} />
+          </Route>
         </Route>
       </Route>
     </Routes>

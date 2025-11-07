@@ -1,4 +1,6 @@
 import { createId } from "@paralleldrive/cuid2";
+import { serial } from "drizzle-orm/pg-core";
+import { primaryKey } from "drizzle-orm/pg-core";
 import {
   text,
   timestamp,
@@ -16,4 +18,15 @@ export const usersTable = pgTable("users", {
   active: boolean("active").notNull().default(true),
   needsPasswordSetup: boolean("needs_password_setup").notNull().default(true),
   needsOnboarding: boolean("needs_onboarding").notNull().default(true),
+});
+
+export const subjecsTable = pgTable("subjects", {
+  subjectId: serial("subject_id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  code: varchar("code", { length: 255 }).notNull(),
+  photo: text("photo"),
+  createdAt: timestamp("created_at").defaultNow(),
+  teacherId: varchar("teacher_id", { length: 255 }),
+  collaborators: varchar("collaborators", { length: 255 }).array(),
 });

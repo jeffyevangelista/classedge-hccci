@@ -45,9 +45,9 @@ api.interceptors.response.use(
       }
     }
 
-    if (error.message) {
-      error.message = error.response.data.detail ?? error.message;
-    }
+    // if (error.message) {
+    //   error.message = error.response.data.detail ?? error.message;
+    // }
 
     return Promise.reject(error);
   }
