@@ -7,9 +7,13 @@ import {
 import {
   getGradingPeriodCategories,
   getGradingPeriods,
+  updateGradingPeriod,
 } from "./grading-period.apis";
 import { createGradingPeriod } from "./grading-period.apis";
-import type { CreateGradingPeriodFormValues } from "./grading-period.schemas";
+import type {
+  CreateGradingPeriodFormValues,
+  UpdateGradingPeriodFormValues,
+} from "./grading-period.schemas";
 
 export const useGradingPeriodCategories = () => {
   return useQuery({
@@ -32,6 +36,19 @@ export const useCreateGradingPeriod = () => {
   return useMutation({
     mutationFn: (data: CreateGradingPeriodFormValues) =>
       createGradingPeriod(data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["grading-periods", data.academic_term_id],
+      });
+    },
+  });
+};
+
+export const useUpdateGradingPeriod = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: UpdateGradingPeriodFormValues) =>
+      updateGradingPeriod(data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({
         queryKey: ["grading-periods", data.academic_term_id],

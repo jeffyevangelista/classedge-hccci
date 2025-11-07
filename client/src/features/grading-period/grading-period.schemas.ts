@@ -12,3 +12,17 @@ export const createGradingPeriodSchema = z.object({
 export type CreateGradingPeriodFormValues = z.infer<
   typeof createGradingPeriodSchema
 >;
+
+export const updateGradingPeriodSchema = z.object({
+  id: z.number().min(1, "Grading Period ID is required"),
+  academic_term_id: z.number().min(1, "Academic term is required"),
+  start_date: z.date({ message: "Start date is required" }),
+  end_date: z.date({ message: "End date is required" }),
+  grading_period_category_id: z
+    .string()
+    .min(1, "Grading Period Category is required"),
+});
+
+export type UpdateGradingPeriodFormValues = z.infer<
+  typeof updateGradingPeriodSchema
+>;

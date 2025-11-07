@@ -1,6 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { Pencil } from "lucide-react";
 import { useGradingPeriods } from "../grading-period.hooks";
+import UpdateGradingPeriodModal from "./UpdateGradingPeriodModal";
 
 const GradingPeriodList = ({ atId }: { atId: number }) => {
   const { data, isLoading, isError, error } = useGradingPeriods({
@@ -27,9 +26,7 @@ const GradingPeriodList = ({ atId }: { atId: number }) => {
               {gradingPeriod.start_date} – {gradingPeriod.end_date}
             </p>
           </div>
-          <Button size="icon" variant="ghost">
-            <Pencil className="h-4 w-4" />
-          </Button>
+          <UpdateGradingPeriodModal gradingPeriod={gradingPeriod} />
         </div>
       ))}
     </>
