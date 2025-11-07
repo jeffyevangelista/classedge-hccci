@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -7,12 +6,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import GradingPeriod from "@/features/grading-period/components/GradingPeriod";
-import { Pencil } from "lucide-react";
 import { useAcademicTerms } from "../academic-terms.hooks";
 import type { AcademicTerm } from "../academic-terms.types";
+import UpdateAcademicTermModal from "./UpdateAcademicTermModal";
 
-const AcademicTermsList = () => {
-  const { data, isLoading, isError, error } = useAcademicTerms();
+const AcademicTermsList = ({ ayId }: { ayId: number }) => {
+  const { data, isLoading, isError, error } = useAcademicTerms({ ayId });
 
   if (isLoading) return <p>Loading...</p>;
   if (isError) return <p>Error: {error.message}</p>;
@@ -31,9 +30,7 @@ const AcademicTermsList = () => {
                   {academicTerm.start_date} – {academicTerm.end_date}
                 </CardDescription>
               </div>
-              <Button size="icon" variant="ghost">
-                <Pencil className="h-4 w-4" />
-              </Button>
+              <UpdateAcademicTermModal academicTerm={academicTerm} />
             </div>
           </CardHeader>
 

@@ -61,11 +61,7 @@ const UpdateAcademicYearModal = ({
     });
 
     // Reset form to original academic year values
-    reset({
-      name: academicYear.name,
-      start_date: new Date(academicYear.start_date),
-      end_date: new Date(academicYear.end_date),
-    });
+    reset();
 
     setOpen(false);
   };
@@ -78,7 +74,11 @@ const UpdateAcademicYearModal = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleDialogChange}>
+    <Dialog
+      open={open}
+      onOpenChange={handleDialogChange}
+      aria-describedby="update-academic-year-modal"
+    >
       <Tooltip
         open={tooltipOpen}
         onOpenChange={setTooltipOpen}

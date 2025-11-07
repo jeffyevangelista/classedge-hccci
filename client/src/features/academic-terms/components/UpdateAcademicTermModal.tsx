@@ -9,17 +9,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { CircleX, Plus, Loader } from "lucide-react";
+import { CircleX, Loader, Pencil } from "lucide-react";
 import { useState } from "react";
 import {
   useAcademicTermCategories,
-  useCreateAcademicTerm,
+  useUpdateAcademicTerm,
 } from "../academic-terms.hooks";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { CreateAcademicTermFormValues } from "../academic-terms.schemas";
+import type { UpdateAcademicTermFormValues } from "../academic-terms.schemas";
 import { Controller, useForm } from "react-hook-form";
-import { createAcademicTermSchema } from "../academic-terms.schemas";
+import { updateAcademicTermSchema } from "../academic-terms.schemas";
 import { Field, FieldLabel, FieldError } from "@/components/ui/field";
 import {
   Tooltip,
@@ -34,14 +34,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { AcademicTerm } from "../academic-terms.types";
 
-interface CreateAcademicTermModalProps {
-  academicYearId: number;
+interface UpdateAcademicTermModalProps {
+  academicTerm: AcademicTerm;
 }
 
-const CreateAcademicTermModal = ({
-  academicYearId,
-}: CreateAcademicTermModalProps) => {
+const UpdateAcademicTermModal = ({
+  academicTerm,
+}: UpdateAcademicTermModalProps) => {
   const [open, setOpen] = useState(false);
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const {
@@ -49,22 +50,23 @@ const CreateAcademicTermModal = ({
     control,
     reset,
     formState: { errors },
-  } = useForm<CreateAcademicTermFormValues>({
-    resolver: zodResolver(createAcademicTermSchema),
+  } = useForm<UpdateAcademicTermFormValues>({
+    resolver: zodResolver(updateAcademicTermSchema),
     defaultValues: {
-      academic_year_id: Number(academicYearId),
-      academic_term_category_id: undefined,
-      start_date: undefined,
-      end_date: undefined,
+      id: academicTerm.id,
+      academic_year_id: academicTerm.academic_year_id,
+      academic_term_category_id: String(academicTerm.academic_term_category_id),
+      start_date: new Date(academicTerm.start_date),
+      end_date: new Date(academicTerm.end_date),
     },
   });
 
   const {
-    mutateAsync: createAcademicTerm,
+    mutateAsync: updateAcademicTerm,
     isPending,
     isError,
     error,
-  } = useCreateAcademicTerm();
+  } = useUpdateAcademicTerm();
 
   const {
     isLoading: academicTermIsLoading,
@@ -80,13 +82,14 @@ const CreateAcademicTermModal = ({
     }
   };
 
-  const onSubmit = async (data: CreateAcademicTermFormValues) => {
-    await createAcademicTerm(data);
-    console.log(data);
-
-    reset();
-
-    setOpen(false);
+  const onSubmit = async (data: UpdateAcademicTermFormValues) => {
+    try {
+      await updateAcademicTerm(data);
+      reset();
+      setOpen(false);
+    } catch (error) {
+      console.error("Failed to update academic term:", error);
+    }
   };
 
   return (
@@ -94,21 +97,20 @@ const CreateAcademicTermModal = ({
       <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen}>
         <TooltipTrigger asChild>
           <DialogTrigger asChild>
-            <Button variant="default" className="size-9 md:size-auto md:px-4">
-              <Plus className="size-4 md:mr-2" />
-              <span className="hidden md:inline">Academic Term</span>
+            <Button size={"icon"} variant="ghost">
+              <Pencil />
             </Button>
           </DialogTrigger>
         </TooltipTrigger>
-        <TooltipContent>Create a new academic term</TooltipContent>
+        <TooltipContent>Update academic term</TooltipContent>
       </Tooltip>
 
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
-            <DialogTitle>Create Academic Term</DialogTitle>
+            <DialogTitle>Update Academic Term</DialogTitle>
             <DialogDescription>
-              Provide a date range for the new academic term.
+              Provide a date range for the academic term.
             </DialogDescription>
           </DialogHeader>
 
@@ -228,4 +230,4 @@ const CreateAcademicTermModal = ({
   );
 };
 
-export default CreateAcademicTermModal;
+export default UpdateAcademicTermModal;

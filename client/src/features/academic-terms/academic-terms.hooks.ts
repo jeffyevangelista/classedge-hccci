@@ -8,16 +8,17 @@ import {
   createAcademicTerm,
   getAcademicTermCategories,
   getAcademicTerms,
+  updateAcademicTerm,
 } from "./academic-terms.apis";
-import type { CreateAcademicTermFormValues } from "./academic-terms.schemas";
-import { useParams } from "react-router";
+import type {
+  CreateAcademicTermFormValues,
+  UpdateAcademicTermFormValues,
+} from "./academic-terms.schemas";
 
-export const useAcademicTerms = () => {
-  const { ayId } = useParams();
-
+export const useAcademicTerms = ({ ayId }: { ayId: number }) => {
   return useQuery({
     queryKey: ["academic-terms", ayId],
-    queryFn: () => getAcademicTerms(Number(ayId)),
+    queryFn: () => getAcademicTerms(ayId),
     placeholderData: keepPreviousData,
   });
 };
@@ -31,14 +32,29 @@ export const useAcademicTermCategories = () => {
 
 export const useCreateAcademicTerm = () => {
   const queryClient = useQueryClient();
-  const { ayId } = useParams();
-
   return useMutation({
-    mutationKey: ["create-academic-term", ayId],
+    mutationKey: ["create-academic-term"],
     mutationFn: (payload: CreateAcademicTermFormValues) =>
       createAcademicTerm(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["academic-terms", ayId] });
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["academic-terms", data.academic_year_id],
+      });
+    },
+  });
+};
+
+export const useUpdateAcademicTerm = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationKey: ["update-academic-term"],
+    mutationFn: (payload: UpdateAcademicTermFormValues) =>
+      updateAcademicTerm(payload),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({
+        queryKey: ["academic-terms", data.academic_year_id],
+      });
     },
   });
 };

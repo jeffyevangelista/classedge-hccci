@@ -1,8 +1,10 @@
 import { Calendar } from "lucide-react";
 import AcademicTermsList from "./AcademicTermsList";
 import CreateAcademicTermModal from "./CreateAcademicTermModal";
+import { useParams } from "react-router";
 
 const AcademicTerms = () => {
+  const { ayId } = useParams();
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -10,10 +12,10 @@ const AcademicTerms = () => {
           <Calendar className="h-5 w-5 text-muted-foreground" />
           Academic Terms
         </h2>
-        <CreateAcademicTermModal academicYearId={16} />
+        <CreateAcademicTermModal academicYearId={Number(ayId)} />
       </div>
 
-      <AcademicTermsList />
+      <AcademicTermsList ayId={Number(ayId)} />
     </div>
   );
 };

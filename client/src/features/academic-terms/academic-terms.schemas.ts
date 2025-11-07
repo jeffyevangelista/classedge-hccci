@@ -15,7 +15,9 @@ export const createAcademicTermSchema = z
   });
 
 export const updateAcademicTermSchema = z.object({
-  academic_year_id: z.string().min(1, "Academic Year is required"),
+  id: z.number().min(1, "Academic Term ID is required"),
+  academic_year_id: z.number().min(1, "Academic Year is required"),
+  academic_term_category_id: z.string().min(1, "Semester Category is required"),
   start_date: z.date({ message: "Start date is required" }),
   end_date: z.date({ message: "End date is required" }),
 });
