@@ -1,90 +1,133 @@
-import { useState } from "react";
-import { useLogin } from "../auth.hooks";
-
 import { Button } from "@/components/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Field,
-  FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
+  FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Link, useNavigate } from "react-router";
+import { useLogin } from "../auth.hooks";
+import { CircleX, Loader } from "lucide-react";
+// import ReCAPTCHA from "react-google-recaptcha";
+// import { SITE_KEY } from "@/utils/env";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema, type LoginFormValues } from "../auth.schemas";
+import type { LoginCredentials } from "../auth.types";
+import MSAuthButton from "./MSAuthButton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-const LoginForm = () => {
-  const { mutateAsync, isPending } = useLogin();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+export function LoginForm() {
+  const navigate = useNavigate();
+  const { mutateAsync: login, isPending, isError, error } = useLogin();
 
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    await mutateAsync({
-      email: email,
-      password: password,
-    });
+  const {
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm<LoginCredentials>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      // recaptcha: "",
+    },
+  });
+
+  const handleLogin = async (data: LoginFormValues) => {
+    await login({ ...data });
   };
 
   return (
-    <Card className="max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle>Login to your account</CardTitle>
-        <CardDescription>
-          Enter your email below to login to your account
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleLogin}>
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="email">Email</FieldLabel>
+    <form autoComplete="off" onSubmit={handleSubmit(handleLogin)}>
+      <FieldGroup>
+        <div className="flex flex-col items-center gap-1 text-center">
+          <h1 className="text-2xl font-bold">Welcome to Classedge</h1>
+          <p className="text-muted-foreground text-sm text-balance">
+            A learning Platform of HCCCI
+          </p>
+        </div>
+
+        {isError && (
+          <Alert variant="destructive" className="items-center">
+            <CircleX />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error.message}</AlertDescription>
+          </Alert>
+        )}
+        <Field>
+          <FieldLabel htmlFor="email">Email</FieldLabel>
+          <Controller
+            control={control}
+            name="email"
+            render={({ field, fieldState }) => (
               <Input
+                autoComplete="off"
                 id="email"
-                type="email"
-                placeholder="m@example.com"
-                required
-                value={email}
-                onChange={({ target }) => setEmail(target.value)}
+                placeholder="juandelacruz@hccci.edu.ph"
+                {...field}
+                className={
+                  fieldState.invalid ? "border-red-500 focus:ring-red-500" : ""
+                }
               />
-            </Field>
-            <Field>
-              <div className="flex items-center">
-                <FieldLabel htmlFor="password">Password</FieldLabel>
-                <a
-                  href="#"
-                  className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                >
-                  Forgot your password?
-                </a>
-              </div>
+            )}
+          />
+          {errors.email && <FieldError>{errors.email?.message}</FieldError>}
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="password">Password</FieldLabel>
+          <Controller
+            control={control}
+            name="password"
+            render={({ field, fieldState }) => (
               <Input
-                disabled={isPending}
                 id="password"
                 type="password"
-                required
-                value={password}
-                onChange={({ target }) => setPassword(target.value)}
+                {...field}
+                className={
+                  fieldState.invalid ? "border-red-500 focus:ring-red-500" : ""
+                }
               />
-            </Field>
-            <Field>
-              <Button type="submit">Login</Button>
-              <Button variant="outline" type="button">
-                Login with Google
-              </Button>
-              <FieldDescription className="text-center">
-                Don&apos;t have an account? <a href="#">Sign up</a>
-              </FieldDescription>
-            </Field>
-          </FieldGroup>
-        </form>
-      </CardContent>
-    </Card>
-  );
-};
+            )}
+          />
+          {errors.password && (
+            <FieldError>{errors.password?.message}</FieldError>
+          )}
+          <div className="flex items-center">
+            <Link
+              to="/forgot-password"
+              className="ml-auto text-sm underline-offset-4 hover:underline"
+            >
+              Forgot your password?
+            </Link>
+          </div>
+        </Field>
 
-export default LoginForm;
+        {/* <Field>
+          <div className="flex justify-center">
+            <Controller
+              control={control}
+              name="recaptcha"
+              render={({ field }) => (
+                <ReCAPTCHA sitekey={SITE_KEY} {...field} />
+              )}
+            />
+          </div>
+          {errors.recaptcha && (
+            <FieldError>{errors.recaptcha?.message}</FieldError>
+          )}
+        </Field> */}
+
+        <Field>
+          <Button type="submit" disabled={isPending}>
+            {isPending ? <Loader className="animate-spin" /> : "Login"}
+          </Button>
+        </Field>
+        <FieldSeparator>or continue with</FieldSeparator>
+        {/* <MSAuthButton /> */}
+      </FieldGroup>
+    </form>
+  );
+}
